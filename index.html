@@ -892,19 +892,51 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
 ============================================================ -->
 <script>
 /* ════════════════════════════════════════════════════
-   GAS API — semua panggilan ke backend GAS
+   GAS API — JSONP (bypass CORS sepenuhnya)
+   Script tag injection → tiada CORS issue
 ════════════════════════════════════════════════════ */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxjzkJFz3Vfw4WinIsVfEcrqtlM7qxIlQsZvfl5g8rECW6aDpGKdPYrSvs9nRKXAct3/exec';
 
 function gasCall(action, data, onSuccess, onFailure) {
-  var url = GAS_URL + '?action=' + encodeURIComponent(action);
+  // Nama callback unik
+  var cbName = '_gas_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+
+  // Cleanup — buang script tag & callback dari window
+  var timer;
+  function cleanup() {
+    clearTimeout(timer);
+    delete window[cbName];
+    var el = document.getElementById(cbName);
+    if (el) el.remove();
+  }
+
+  // Timeout 20 saat
+  timer = setTimeout(function () {
+    cleanup();
+    if (onFailure) onFailure({ message: 'Permintaan tamat masa. Sila cuba semula.' });
+  }, 20000);
+
+  // Daftar callback global
+  window[cbName] = function (result) {
+    cleanup();
+    if (onSuccess) onSuccess(result);
+  };
+
+  // Bina URL
+  var url = GAS_URL + '?callback=' + cbName + '&action=' + encodeURIComponent(action);
   if (data && Object.keys(data).length > 0) {
     url += '&data=' + encodeURIComponent(JSON.stringify(data));
   }
-  fetch(url)
-    .then(function (r) { return r.json(); })
-    .then(function (result) { if (onSuccess) onSuccess(result); })
-    .catch(function (err) { if (onFailure) onFailure({ message: err.message }); });
+
+  // Inject script tag
+  var script = document.createElement('script');
+  script.id  = cbName;
+  script.src = url;
+  script.onerror = function () {
+    cleanup();
+    if (onFailure) onFailure({ message: 'Gagal sambung ke pelayan. Semak URL GAS.' });
+  };
+  document.head.appendChild(script);
 }
 
 /* ════════════════════════════════════════════════════
