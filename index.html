@@ -390,9 +390,59 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
 .toast.info { background: var(--blue); }
 
 /* ============================================================
-   CONFIRM MODAL
+   PROFILE DETAIL PAGE
 ============================================================ */
-.confirm-icon { width: 56px; height: 56px; background: #fef2f2; color: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 14px; }
+.pd-back { margin-bottom: 18px; }
+
+.pd-hero {
+  background: var(--card); border-radius: var(--rl); padding: 22px 24px;
+  box-shadow: var(--sh-sm); display: flex; align-items: center; gap: 18px;
+  margin-bottom: 22px; flex-wrap: wrap;
+}
+.pd-hero .avatar { width: 64px; height: 64px; font-size: 1.3rem; flex-shrink: 0; }
+.pd-hero-info { flex: 1; min-width: 0; }
+.pd-hero-name { font-size: 1.25rem; font-weight: 800; color: var(--navy); letter-spacing: -.02em; }
+.pd-hero-pos  { font-size: .875rem; color: var(--muted); margin-top: 2px; }
+.pd-hero-tags { display: flex; gap: 8px; margin-top: 7px; flex-wrap: wrap; }
+
+.pd-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.pd-section-title { font-size: .85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+
+/* Category password cards */
+.pd-kat-list { display: flex; flex-direction: column; gap: 10px; }
+.pd-kat-card {
+  background: var(--card); border-radius: var(--rl); padding: 16px 20px;
+  box-shadow: var(--sh-sm); display: flex; align-items: center; gap: 14px;
+  border-left: 4px solid var(--border); transition: border-color var(--t);
+}
+.pd-kat-card.has-pw { border-left-color: var(--green); }
+.pd-kat-icon {
+  width: 40px; height: 40px; border-radius: 10px; background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: var(--muted); flex-shrink: 0;
+}
+.pd-kat-card.has-pw .pd-kat-icon { background: #f0fdf4; color: var(--green); }
+.pd-kat-body { flex: 1; min-width: 0; }
+.pd-kat-name { font-weight: 700; font-size: .9rem; color: var(--text); }
+.pd-kat-pw   {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700;
+  color: var(--navy); letter-spacing: 3px; margin-top: 4px; display: flex;
+  align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.pd-kat-ts   { font-size: .72rem; color: var(--light); margin-top: 3px; }
+.pd-kat-empty{ font-size: .8125rem; color: var(--light); margin-top: 4px; font-style: italic; }
+.pd-kat-acts { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Padam confirm inside detail page */
+.pd-del-confirm {
+  background: #fff5f5; border: 1.5px solid #fecaca; border-radius: var(--r);
+  padding: 14px 18px; margin-top: 10px; display: flex; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+}
+.pd-del-confirm .msg { font-size: .8125rem; color: var(--red); flex: 1; }
 </style>
 </head>
 <body>
@@ -493,7 +543,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
       <div class="ph between">
         <div>
           <div class="ph-title">Dashboard</div>
-          <div class="ph-sub">Pilih profil untuk menjana kata laluan</div>
+          <div class="ph-sub">Pilih profil untuk mengurus kata laluan</div>
         </div>
         <button class="btn btn-blue" onclick="gotoPage('settings')">
           <i class="fa fa-plus"></i> Tambah Profil
@@ -520,6 +570,46 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
         </div>
         <div id="profileGrid" class="profile-grid">
           <div class="loading-row" style="grid-column:1/-1"><div class="spin"></div> Memuatkan profil...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ▸ PROFILE DETAIL -->
+    <div id="profileDetailPage" class="page hidden">
+      <div class="ph between">
+        <div>
+          <div class="ph-title" id="pdPageTitle">Profil</div>
+          <div class="ph-sub">Semak &amp; urus kata laluan mengikut sistem</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeProfileDetail()">
+          <i class="fa fa-arrow-left"></i> Kembali
+        </button>
+      </div>
+      <div class="pb">
+        <!-- Profile hero -->
+        <div class="pd-hero">
+          <div class="avatar" id="pdAvatar">AB</div>
+          <div class="pd-hero-info">
+            <div class="pd-hero-name" id="pdName">—</div>
+            <div class="pd-hero-pos"  id="pdPos">—</div>
+            <div class="pd-hero-tags">
+              <span class="tag tag-blue" id="pdDept" style="display:none;"></span>
+              <span class="tag tag-gray" id="pdDate" style="font-size:.68rem;"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-outline btn-sm" id="pdEditBtn" onclick="openProfileModal('')">
+              <i class="fa fa-edit"></i> Edit Profil
+            </button>
+          </div>
+        </div>
+
+        <!-- Category password list -->
+        <div class="pd-section-head">
+          <div class="pd-section-title"><i class="fa fa-key" style="margin-right:6px;"></i>Kata Laluan Mengikut Sistem</div>
+        </div>
+        <div id="pdKatList" class="pd-kat-list">
+          <div class="loading-row"><div class="spin"></div> Memuatkan...</div>
         </div>
       </div>
     </div>
@@ -671,12 +761,21 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
           </div>
         </div>
 
-        <!-- Kategori selector -->
-        <div class="kat-select-wrap">
+        <!-- Kategori selector OR chip (bergantung pada sumber) -->
+        <div class="kat-select-wrap" id="genKatDropWrap">
           <div class="gen-section-lbl">Untuk Sistem / Kategori</div>
           <select id="genKatSelect" onchange="onGenKatChange()">
             <option value="">-- Pilih Kategori --</option>
           </select>
+        </div>
+        <!-- Kategori chip (bila dibuka dari halaman profil) -->
+        <div id="genKatChipWrap" class="hidden" style="margin-bottom:16px;">
+          <div class="gen-section-lbl">Untuk Sistem / Kategori</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--sky);border:1.5px solid var(--blue);border-radius:var(--r);">
+            <i class="fa fa-tag" style="color:var(--blue);"></i>
+            <span id="genKatChipLabel" style="font-weight:700;color:var(--navy);font-size:.9rem;">—</span>
+            <span class="tag tag-blue" style="margin-left:auto;font-size:.68rem;">Terpilih</span>
+          </div>
         </div>
 
         <!-- Length selector -->
@@ -1104,13 +1203,18 @@ function renderCards(list) {
     return;
   }
   grid.innerHTML = list.map(function (p) {
-    return '<div class="p-card" onclick="openGenModal(\'' + p.id + '\')">' +
+    // Count active passwords for this profile
+    var activeCnt = allLogs.filter(function (l) { return l.profileId === p.id && l.status === 'Aktif'; }).length;
+    return '<div class="p-card" onclick="openProfileDetail(\'' + p.id + '\')">' +
       '<div class="avatar">' + initials(p.nama) + '</div>' +
       '<div class="p-name">' + esc(p.nama) + '</div>' +
       '<div class="p-pos">'  + esc(p.jawatan) + '</div>' +
       (p.jabatan ? '<div class="p-dept">' + esc(p.jabatan) + '</div>' : '') +
-      '<button class="btn btn-blue btn-sm btn-full" style="margin-top:4px;" onclick="event.stopPropagation();openGenModal(\'' + p.id + '\')">' +
-        '<i class="fa fa-key"></i> Jana Kata Laluan' +
+      (activeCnt > 0
+        ? '<div style="font-size:.72rem;color:var(--green);margin-top:2px;"><i class="fa fa-key" style="margin-right:4px;"></i>' + activeCnt + ' password aktif</div>'
+        : '<div style="font-size:.72rem;color:var(--light);margin-top:2px;">Tiada password lagi</div>') +
+      '<button class="btn btn-blue btn-sm btn-full" style="margin-top:8px;" onclick="event.stopPropagation();openProfileDetail(\'' + p.id + '\')">' +
+        '<i class="fa fa-user-circle"></i> Lihat Profil' +
       '</button></div>';
   }).join('');
 }
@@ -1284,11 +1388,137 @@ function confirmDeleteKat() {
 }
 
 /* ════════════════════════════════════════════════════
+   PROFILE DETAIL PAGE
+════════════════════════════════════════════════════ */
+var curDetailProfile = null;
+var delPdKatId = null; // kategori yang hendak dipadam aktif pw
+
+function openProfileDetail(profileId) {
+  var p = allProfiles.find(function (x) { return x.id === profileId; });
+  if (!p) return;
+  curDetailProfile = p;
+
+  // Fill header
+  document.getElementById('pdAvatar').textContent = initials(p.nama);
+  document.getElementById('pdName').textContent   = p.nama;
+  document.getElementById('pdPos').textContent    = p.jawatan;
+  document.getElementById('pdPageTitle').textContent = p.nama;
+  var deptEl = document.getElementById('pdDept');
+  if (p.jabatan) { deptEl.textContent = p.jabatan; deptEl.style.display = ''; }
+  else deptEl.style.display = 'none';
+  document.getElementById('pdDate').textContent = p.createdAt ? 'Daftar: ' + p.createdAt : '';
+  document.getElementById('pdEditBtn').setAttribute('onclick', "openProfileModal('" + p.id + "')");
+
+  renderPdKatList();
+  gotoPage('profileDetail');
+}
+
+function closeProfileDetail() {
+  curDetailProfile = null;
+  gotoPage('dash');
+}
+
+function renderPdKatList() {
+  if (!curDetailProfile) return;
+  var pid = curDetailProfile.id;
+  var el  = document.getElementById('pdKatList');
+
+  if (allKategori.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="ei">🏷️</div><h3>Tiada kategori</h3><p>Tambah kategori dalam "Urus Kategori"</p></div>';
+    return;
+  }
+
+  el.innerHTML = allKategori.map(function (k) {
+    var active = allLogs.find(function (l) {
+      return l.profileId === pid && l.katId === k.id && l.status === 'Aktif';
+    });
+    var hasPw  = Boolean(active);
+    var iconClass = hasPw ? 'fa fa-check-circle' : 'fa fa-lock';
+    var rowId  = 'pdrow-' + k.id.replace(/[^a-zA-Z0-9]/g, '');
+
+    var pwSection = hasPw
+      ? '<div class="pd-kat-pw">' +
+          '<span class="mono">' + esc(active.password) + '</span>' +
+          '<button class="btn btn-ghost btn-sm btn-icon" onclick="gsCopy(\'' + esc(active.password) + '\',this)" title="Salin"><i class="fa fa-copy"></i></button>' +
+        '</div>' +
+        '<div class="pd-kat-ts"><i class="fa fa-clock" style="margin-right:4px;"></i>' + esc(active.timestamp) + ' &bull; ' + esc(active.panjang) + '</div>'
+      : '<div class="pd-kat-empty">Tiada password aktif untuk sistem ini</div>';
+
+    var acts = '<div class="pd-kat-acts">' +
+      '<button class="btn btn-gold btn-sm" onclick="openGenModalFromDetail(\'' + k.id + '\',\'' + esc(k.nama) + '\')">' +
+        '<i class="fa fa-sync-alt"></i> Jana' + (hasPw ? ' Baharu' : '') +
+      '</button>' +
+      (hasPw
+        ? '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="showPdDelConfirm(\'' + k.id + '\',\'' + esc(k.nama) + '\',\'' + rowId + '\')">' +
+            '<i class="fa fa-trash-alt"></i> Padam' +
+          '</button>'
+        : '') +
+    '</div>';
+
+    return '<div class="pd-kat-card ' + (hasPw ? 'has-pw' : '') + '" id="' + rowId + '">' +
+      '<div class="pd-kat-icon"><i class="' + iconClass + '"></i></div>' +
+      '<div class="pd-kat-body">' +
+        '<div class="pd-kat-name">' + esc(k.nama) + '</div>' +
+        pwSection +
+      '</div>' +
+      acts +
+    '</div>';
+  }).join('');
+}
+
+function showPdDelConfirm(katId, katNama, rowId) {
+  // Remove any existing confirm boxes
+  document.querySelectorAll('.pd-del-confirm').forEach(function (el) { el.remove(); });
+
+  var row  = document.getElementById(rowId);
+  if (!row) return;
+
+  var box = document.createElement('div');
+  box.className = 'pd-del-confirm';
+  box.id = 'delconf-' + rowId;
+  box.innerHTML =
+    '<div class="msg"><i class="fa fa-exclamation-triangle" style="margin-right:6px;"></i>' +
+    'Padam password aktif untuk <strong>' + esc(katNama) + '</strong>? Rekod akan disimpan sebagai arkib.' +
+    '</div>' +
+    '<button class="btn btn-ghost btn-sm" onclick="hidePdDelConfirm()">Batal</button>' +
+    '<button class="btn btn-red btn-sm" onclick="confirmPdDel(\'' + katId + '\',\'' + rowId + '\')">' +
+    '<i class="fa fa-trash-alt"></i> Ya, Padam</button>';
+
+  row.insertAdjacentElement('afterend', box);
+}
+
+function hidePdDelConfirm() {
+  document.querySelectorAll('.pd-del-confirm').forEach(function (el) { el.remove(); });
+}
+
+function confirmPdDel(katId, rowId) {
+  if (!curDetailProfile) return;
+  var btn = document.querySelector('#delconf-' + rowId + ' .btn-red');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>'; }
+  gasCall('archiveActivePassword', { profileId: curDetailProfile.id, katId: katId },
+    function (r) {
+      if (r.success) {
+        // Update allLogs in memory
+        allLogs.forEach(function (l) {
+          if (l.profileId === curDetailProfile.id && l.katId === katId && l.status === 'Aktif') l.status = 'Arkib';
+        });
+        hidePdDelConfirm();
+        renderPdKatList();
+        toast('Password diarkibkan.', 'ok');
+      } else { toast(r.message || 'Gagal.', 'err'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-trash-alt"></i> Ya, Padam'; } }
+    },
+    function (e) { toast('Ralat: ' + e.message, 'err'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-trash-alt"></i> Ya, Padam'; } }
+  );
+}
+
+/* ════════════════════════════════════════════════════
    GENERATE PASSWORD
 ════════════════════════════════════════════════════ */
+var genFromDetail = false; // true bila buka modal dari halaman profil
 function openGenModal(profileId) {
   var p = allProfiles.find(function (x) { return x.id === profileId; });
   if (!p) return;
+  genFromDetail = false;
   curProfile = p; curPw = ''; curKatId = ''; curKatNama = ''; arkibRecord = null;
 
   document.getElementById('genAv').textContent   = initials(p.nama);
@@ -1296,8 +1526,11 @@ function openGenModal(profileId) {
   document.getElementById('genPos').textContent  = p.jawatan;
   document.getElementById('genDept').textContent = p.jabatan || '';
 
-  // Reset state
+  // Show dropdown, hide chip
+  document.getElementById('genKatDropWrap').classList.remove('hidden');
+  document.getElementById('genKatChipWrap').classList.add('hidden');
   document.getElementById('genKatSelect').value = '';
+
   selectLen(8);
   resetPwDisplay();
   document.getElementById('genBtn').disabled  = true;
@@ -1305,7 +1538,33 @@ function openGenModal(profileId) {
   document.getElementById('saveBtn').disabled = true;
   document.getElementById('saveBtn').innerHTML = '<i class="fa fa-save"></i> Simpan';
 
-  // Show generate view
+  showGenView();
+  openModal('genModal');
+}
+
+function openGenModalFromDetail(katId, katNama) {
+  if (!curDetailProfile) return;
+  genFromDetail = true;
+  var p = curDetailProfile;
+  curProfile = p; curPw = ''; curKatId = katId; curKatNama = katNama; arkibRecord = null;
+
+  document.getElementById('genAv').textContent   = initials(p.nama);
+  document.getElementById('genName').textContent = p.nama;
+  document.getElementById('genPos').textContent  = p.jawatan;
+  document.getElementById('genDept').textContent = p.jabatan || '';
+
+  // Hide dropdown, show chip
+  document.getElementById('genKatDropWrap').classList.add('hidden');
+  document.getElementById('genKatChipWrap').classList.remove('hidden');
+  document.getElementById('genKatChipLabel').textContent = katNama;
+
+  selectLen(8);
+  resetPwDisplay();
+  document.getElementById('genBtn').disabled  = false; // kategori dah ada
+  document.getElementById('copyBtn').disabled = true;
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').innerHTML = '<i class="fa fa-save"></i> Simpan';
+
   showGenView();
   openModal('genModal');
 }
@@ -1427,8 +1686,12 @@ function doArchiveAndSave() {
   gasCall('archiveOldAndSaveNew', { profileId: curProfile.id, profileName: curProfile.nama, jawatan: curProfile.jawatan, password: curPw, panjang: curLen, katId: curKatId, katNama: curKatNama },
     function (r) {
       btn.disabled = false; btn.innerHTML = '<i class="fa fa-archive"></i> Arkibkan &amp; Simpan Baharu';
-      if (r.success) { showGenView(); var saveBtn = document.getElementById('saveBtn'); afterSaveSuccess(saveBtn); toast('Password lama diarkibkan. Password baharu disimpan!', 'ok'); }
-      else { toast(r.message || 'Gagal.', 'err'); }
+      if (r.success) {
+        showGenView();
+        var saveBtn = document.getElementById('saveBtn');
+        afterSaveSuccess(saveBtn);
+        if (!genFromDetail) toast('Password lama diarkibkan. Password baharu disimpan!', 'ok');
+      } else { toast(r.message || 'Gagal.', 'err'); }
     },
     function (e) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-archive"></i> Arkibkan &amp; Simpan Baharu'; toast('Ralat: ' + e.message, 'err'); }
   );
@@ -1448,6 +1711,13 @@ function afterSaveSuccess(saveBtn) {
   // Add new entry to front
   allLogs.unshift({ timestamp: now, profileId: curProfile.id, profileName: curProfile.nama, jawatan: curProfile.jawatan, password: curPw, panjang: curLen + ' aksara', katId: curKatId, katNama: curKatNama, status: 'Aktif', arkibTs: '' });
   arkibRecord = null;
+  // Refresh halaman profil detail jika dibuka dari sana
+  if (genFromDetail && curDetailProfile) {
+    setTimeout(function () {
+      closeModal('genModal');
+      renderPdKatList();
+    }, 900);
+  }
 }
 
 function cancelArkibConfirm() { showGenView(); }
