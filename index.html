@@ -992,7 +992,9 @@ window.onload = function () {
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
       document.querySelectorAll('.overlay:not(.hidden)').forEach(function (el) { closeModal(el.id); });
-      closeGsDropdown();
+      // Escape → tutup dropdown DAN kosongkan search
+      document.getElementById('gsDropdown').classList.add('hidden');
+      document.getElementById('gsInput').value = '';
     }
   });
 };
@@ -1044,6 +1046,8 @@ function doLogout() {
   document.getElementById('appPage').classList.add('hidden');
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('iPin').value = '';
+  document.getElementById('gsInput').value = '';
+  document.getElementById('gsDropdown').classList.add('hidden');
   document.getElementById('loginErr').style.display = 'none';
   allProfiles = []; allKategori = []; allLogs = []; genCount = 0;
 }
@@ -1507,7 +1511,10 @@ function onGlobalSearch() {
   clearTimeout(gsTimer);
   gsTimer = setTimeout(function () {
     var q = document.getElementById('gsInput').value.trim();
-    if (q.length < 2) { closeGsDropdown(); return; }
+    if (q.length < 2) {
+      document.getElementById('gsDropdown').classList.add('hidden');
+      return; // sembunyi dropdown sahaja — JANGAN clear input
+    }
     performGlobalSearch(q.toLowerCase());
   }, 280);
 }
@@ -1560,7 +1567,7 @@ function fallbackCopyStr(str, cb) {
 
 function closeGsDropdown() {
   document.getElementById('gsDropdown').classList.add('hidden');
-  document.getElementById('gsInput').value = '';
+  // Input TIDAK dikosongkan — pengguna boleh sambung taip
 }
 
 /* ════════════════════════════════════════════════════
