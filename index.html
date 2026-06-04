@@ -1375,45 +1375,64 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
 ════════════════════════════════════════════════════ */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxjzkJFz3Vfw4WinIsVfEcrqtlM7qxIlQsZvfl5g8rECW6aDpGKdPYrSvs9nRKXAct3/exec';
 
+/* ════════════════════════════════════════════════════
+   GAS API — Fetch dahulu, JSONP sebagai fallback
+   Lebih reliable merentasi desktop dan mobile
+════════════════════════════════════════════════════ */
 function gasCall(action, data, onSuccess, onFailure) {
-  // Nama callback unik
-  var cbName = '_gas_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+  var url = GAS_URL + '?action=' + encodeURIComponent(action);
+  if (data && Object.keys(data).length > 0) {
+    url += '&data=' + encodeURIComponent(JSON.stringify(data));
+  }
 
-  // Cleanup — buang script tag & callback dari window
+  // Cuba fetch dahulu (sesuai untuk mobile & desktop moden)
+  fetch(url)
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP_' + r.status);
+      return r.json();
+    })
+    .then(function (result) {
+      if (onSuccess) onSuccess(result);
+    })
+    .catch(function () {
+      // Fetch gagal (CORS/redirect issue) — guna JSONP
+      _gasJsonp(url, onSuccess, onFailure, 0);
+    });
+}
+
+// JSONP dengan retry automatik
+function _gasJsonp(url, onSuccess, onFailure, attempt) {
+  var cbName = '_gc_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
   var timer;
+
   function cleanup() {
     clearTimeout(timer);
     delete window[cbName];
     var el = document.getElementById(cbName);
-    if (el) el.remove();
+    if (el && el.parentNode) el.parentNode.removeChild(el);
   }
 
-  // Timeout 20 saat
-  timer = setTimeout(function () {
+  function retry(delay) {
     cleanup();
-    if (onFailure) onFailure({ message: 'Permintaan tamat masa. Sila cuba semula.' });
-  }, 20000);
+    if (attempt < 2) {
+      setTimeout(function () { _gasJsonp(url, onSuccess, onFailure, attempt + 1); }, delay);
+    } else {
+      if (onFailure) onFailure({ message: 'network_error' });
+    }
+  }
 
-  // Daftar callback global
+  // Timeout 18 saat
+  timer = setTimeout(function () { retry(1000); }, 18000);
+
   window[cbName] = function (result) {
     cleanup();
     if (onSuccess) onSuccess(result);
   };
 
-  // Bina URL
-  var url = GAS_URL + '?callback=' + cbName + '&action=' + encodeURIComponent(action);
-  if (data && Object.keys(data).length > 0) {
-    url += '&data=' + encodeURIComponent(JSON.stringify(data));
-  }
-
-  // Inject script tag
   var script = document.createElement('script');
   script.id  = cbName;
-  script.src = url;
-  script.onerror = function () {
-    cleanup();
-    if (onFailure) onFailure({ message: 'Gagal sambung ke pelayan. Semak URL GAS.' });
-  };
+  script.src = url + '&callback=' + cbName;
+  script.onerror = function () { retry(1500); };
   document.head.appendChild(script);
 }
 
