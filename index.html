@@ -628,6 +628,20 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
 .session-warn strong { font-weight: 800; font-family: 'JetBrains Mono', monospace; }
 
 /* ============================================================
+   METHOD SELECTOR (dalam modal jana)
+============================================================ */
+.method-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.method-btn { flex: 1; padding: 11px 8px; border: 2px solid var(--border); border-radius: var(--r); background: var(--card); cursor: pointer; text-align: center; transition: border-color var(--t), background var(--t); font-family: inherit; }
+.method-btn .mb-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+.method-btn .mb-name { font-size: .8rem; font-weight: 700; color: var(--text); display: block; }
+.method-btn .mb-desc { font-size: .68rem; color: var(--muted); display: block; margin-top: 2px; }
+.method-btn:hover { border-color: var(--blue); }
+.method-btn.sel { border-color: var(--blue); background: var(--sky); }
+.method-btn.sel .mb-name { color: var(--blue); }
+[data-theme="dark"] .method-btn { background: #1f2937; border-color: var(--border); }
+[data-theme="dark"] .method-btn.sel { background: rgba(37,99,235,.15); }
+
+/* ============================================================
    NOTA FIELD
 ============================================================ */
 .gen-nota {
@@ -1059,18 +1073,33 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
           </div>
         </div>
 
+        <!-- Kaedah Jana -->
+        <div class="gen-section-lbl">Kaedah Jana</div>
+        <div class="method-row">
+          <button class="method-btn sel" id="mSistem" onclick="selectMethod('sistem')">
+            <span class="mb-icon">🔤</span>
+            <span class="mb-name">Ikut Sistem</span>
+            <span class="mb-desc">Suku kata</span>
+          </button>
+          <button class="method-btn" id="mRawak" onclick="selectMethod('rawak')">
+            <span class="mb-icon">🎲</span>
+            <span class="mb-name">Jana Rawak</span>
+            <span class="mb-desc">Perkataan Melayu</span>
+          </button>
+        </div>
+
         <!-- Length selector -->
         <div class="gen-section-lbl">Bilangan Aksara</div>
         <div class="len-row">
           <button class="len-btn sel" id="len8" onclick="selectLen(8)">
             <span class="ln">8</span>
             <span class="ll">Aksara</span>
-            <span class="lb" style="color:var(--green);">Mudah</span>
+            <span class="lb" id="len8desc" style="color:var(--green);">Mudah</span>
           </button>
           <button class="len-btn" id="len12" onclick="selectLen(12)">
             <span class="ln">12</span>
             <span class="ll">Aksara</span>
-            <span class="lb" style="color:var(--gold);">Sederhana</span>
+            <span class="lb" id="len12desc" style="color:var(--gold);">Sederhana</span>
           </button>
         </div>
 
@@ -1710,6 +1739,63 @@ function undoFromDetail(katId, timestamp) {
 }
 
 /* ════════════════════════════════════════════════════
+   WORDLIST — ~280 perkataan Melayu
+════════════════════════════════════════════════════ */
+var WORDS = [
+  // Bunga
+  'mawar','melur','orkid','dahlia','jasmin','kenanga','cempaka','seroja',
+  'teratai','tanjung','bakawali','kemuning','kekwa','puring','sakura',
+  'tulip','lavender','ros','violet','aster','zinnia','salvia','cosmos',
+  'gerbera','begonia','peony','ixora','magnolia','wisteria','verbena',
+  // Haiwan Darat
+  'harimau','gajah','singa','kuda','kancil','rusa','kijang','pelanduk',
+  'badak','tenuk','tapir','beruang','serigala','musang','tupai','arnab',
+  'landak','biawak','memerang','kerbau','lembu','kambing','puma','jaguar',
+  'cheetah','leopard','rubah','bison','panda','koala','dingo','merak',
+  'enggang','helang','merpati','rajawali',
+  // Haiwan Laut & Udara
+  'penyu','lumba','paus','jerung','duyung','sotong','udang','ketam',
+  'kerang','siakap','kerapu','tilapia','patin','haruan','bawal','tongkol',
+  'tenggiri','selar','gelama','puyu','pelikan','camar','bangau','angsa',
+  'itik','nuri',
+  // Buah-buahan
+  'durian','mangga','betik','rambutan','langsat','manggis','jambu',
+  'pisang','nangka','cempedak','duku','salak','markisa','nenas',
+  'tembikai','limau','kelapa','longan','kiwi','kurma','ara','bacang',
+  'binjai','tampoi','rukam','sentul','rambai','kedondong',
+  // Alam Semula Jadi
+  'gunung','sungai','bukit','tasik','rimba','hutan','pantai','pulau',
+  'delta','teluk','banjaran','lembah','gua','lautan','selat','tanjong',
+  'bumi','batu','karang','riak','ombak','muara','lereng','puncak',
+  'sawah','padang','dataran','rawa','paya',
+  // Permata & Logam
+  'mutiara','berlian','zamrud','nilam','intan','baiduri','topaz','ruby',
+  'kristal','safir','opal','garnet','amber','jasper','perak','emas',
+  'platina','tembaga','permata','granit','pualam',
+  // Warna
+  'merah','biru','hijau','ungu','kuning','jingga','putih','hitam',
+  'kelabu','perang','maroon','magenta','teal','nila','scarlet','crimson',
+  'indigo','ivory',
+  // Pokok & Tumbuhan
+  'jati','meranti','keruing','merbau','cengal','bakau','nibung','rotan',
+  'buluh','pandan','serai','halia','lengkuas','kunyit','lada','selasih',
+  'pegaga','kelor','mengkudu',
+  // Angkasa
+  'venus','marikh','zuhal','utarid','musytari','neptun','saturnus',
+  'meteor','komet','nebula','pulsar','aurora','galaksi','bintang',
+  'bulan','matahari','orbit','nova',
+  // Cuaca & Langit
+  'pelangi','embun','kabus','bayu','topan','ribut','guruh','kilat',
+  'petir','awan','cahaya','sinar','fajar','senja','mega','mendung',
+  'gerimis',
+  // Positif / Umum
+  'mulia','megah','perkasa','gagah','berani','bijak','cerah','gemilang',
+  'harapan','impian','semangat','tekad','wira','satria','mahkota',
+  'legasi','warisan','tulen','lestari','murni','sejati','damai','setia',
+  'jujur','amanah','tabah','sabar','ikhlas','tulus'
+];
+
+/* ════════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════════ */
 var allProfiles = [];
@@ -1722,6 +1808,7 @@ var curProfile   = null;
 var curKatId     = '';
 var curKatNama   = '';
 var curLen       = 8;
+var curMethod    = 'sistem'; // 'sistem' atau 'rawak'
 var curPw        = '';
 var arkibRecord  = null; // old active record found during check
 
@@ -2236,6 +2323,7 @@ function openGenModal(profileId) {
   if (!p) return;
   genFromDetail = false;
   curProfile = p; curPw = ''; curKatId = ''; curKatNama = ''; arkibRecord = null;
+  curMethod = 'sistem';
 
   document.getElementById('genAv').textContent   = initials(p.nama);
   document.getElementById('genName').textContent = p.nama;
@@ -2248,6 +2336,7 @@ function openGenModal(profileId) {
   document.getElementById('genKatSelect').value = '';
   document.getElementById('genNota').value = '';
 
+  selectMethod('sistem');
   selectLen(8);
   resetPwDisplay();
   document.getElementById('genBtn').disabled  = true;
@@ -2275,6 +2364,8 @@ function openGenModalFromDetail(katId, katNama) {
   document.getElementById('genKatChipWrap').classList.remove('hidden');
   document.getElementById('genKatChipLabel').textContent = katNama;
 
+  curMethod = 'sistem';
+  selectMethod('sistem');
   selectLen(8);
   resetPwDisplay();
   document.getElementById('genBtn').disabled  = false; // kategori dah ada
@@ -2311,7 +2402,24 @@ function selectLen(n) {
   document.getElementById('len12').classList.toggle('sel', n === 12);
 }
 
-function generatePw(len) {
+function selectMethod(m) {
+  curMethod = m;
+  document.getElementById('mSistem').classList.toggle('sel', m === 'sistem');
+  document.getElementById('mRawak').classList.toggle('sel',  m === 'rawak');
+  updateLenBtnLabels();
+  resetPwDisplay();
+}
+
+function updateLenBtnLabels() {
+  var isSistem = curMethod === 'sistem';
+  document.getElementById('len8desc').textContent  = isSistem ? 'Mudah'       : '1 Perkataan';
+  document.getElementById('len12desc').textContent = isSistem ? 'Sederhana'   : '2 Perkataan';
+  document.getElementById('len8desc').style.color  = 'var(--green)';
+  document.getElementById('len12desc').style.color = 'var(--gold)';
+}
+
+// ── Kaedah Sistem (suku kata) ───────────────────────
+function generateSistemPw(len) {
   var cons   = 'bdfghjklmnprstwo';
   var vowels = 'aeiou';
   var nums   = '23456789';
@@ -2321,8 +2429,45 @@ function generatePw(len) {
   function rN() { return nums[Math.floor(Math.random() * nums.length)]; }
   function rS() { return syms[Math.floor(Math.random() * syms.length)]; }
   function syl(cap) { var s = rC() + rV(); return cap ? s[0].toUpperCase() + s[1] : s; }
-  if (len === 8)  return syl(true) + syl(false) + rN() + rN() + rN() + rS();           // 2+2+3+1=8
-  return syl(true) + syl(false) + rN() + rN() + rN() + rS() + syl(true) + syl(false);  // 2+2+3+1+2+2=12
+  if (len === 8)  return syl(true) + syl(false) + rN() + rN() + rN() + rS();
+  return syl(true) + syl(false) + rN() + rN() + rN() + rS() + syl(true) + syl(false);
+}
+
+// ── Kaedah Rawak (perkataan Melayu) ─────────────────
+function generateWordPw(len) {
+  var nums = '23456789';
+  var syms = '#@!$%';
+  function rN() { return nums[Math.floor(Math.random() * nums.length)]; }
+  function rS() { return syms[Math.floor(Math.random() * syms.length)]; }
+  function cap(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+  function rWord(minL, maxL) {
+    var pool = WORDS.filter(function(w) { return w.length >= minL && w.length <= maxL; });
+    if (!pool.length) pool = WORDS;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function digits(n) { var s=''; for(var i=0;i<n;i++) s+=rN(); return s; }
+
+  if (len === 8) {
+    // [CapWord(3-6)] + [digits] + [sym] = 8
+    var w = rWord(3, 6);
+    var nd = 8 - w.length - 1; // -1 for symbol
+    if (nd < 1) { w = rWord(3, 5); nd = 8 - w.length - 1; }
+    if (nd < 1) { w = rWord(3, 4); nd = 8 - w.length - 1; }
+    return cap(w) + digits(Math.max(1, nd)) + rS();
+  } else {
+    // [CapWord1(3-5)] + [CapWord2(3-4)] + [digits] + [sym] = 12
+    var w1 = rWord(3, 5);
+    var w2; var tries = 0;
+    do { w2 = rWord(3, 4); tries++; } while (w2 === w1 && tries < 15);
+    var nd = 12 - w1.length - w2.length - 1;
+    if (nd < 1) { w1 = rWord(3,4); w2 = rWord(3,3); nd = 12 - w1.length - w2.length - 1; }
+    return cap(w1) + cap(w2) + digits(Math.max(1, nd)) + rS();
+  }
+}
+
+// ── Dispatch ─────────────────────────────────────────
+function generatePw(len) {
+  return curMethod === 'rawak' ? generateWordPw(len) : generateSistemPw(len);
 }
 
 function doGenerate() {
