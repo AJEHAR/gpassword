@@ -627,6 +627,19 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
 .session-warn .sw-txt { flex: 1; }
 .session-warn strong { font-weight: 800; font-family: 'JetBrains Mono', monospace; }
 
+.pin-boxes { display: flex; gap: 12px; justify-content: center; margin: 20px 0 24px; }
+.pin-box {
+  width: 60px; height: 68px; border: 2px solid var(--border); border-radius: 14px;
+  text-align: center; font-size: 1.8rem; font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; background: var(--card); color: var(--text); outline: none;
+  transition: border-color var(--t), box-shadow var(--t); -webkit-appearance: none;
+  caret-color: transparent;
+}
+.pin-box:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+.pin-box.filled { border-color: var(--navy); background: #f0f4ff; }
+[data-theme="dark"] .pin-box { background: #374151; border-color: #4b5563; color: #f3f4f6; }
+[data-theme="dark"] .pin-box.filled { background: rgba(37,99,235,.15); border-color: var(--blue); }
+
 /* ============================================================
    METHOD SELECTOR (dalam modal jana)
 ============================================================ */
@@ -721,20 +734,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface);
     </div>
     <div class="m-body">
       <div id="loginErr" class="err-box"></div>
-      <div class="form-group">
-        <label style="text-align:center;display:block;font-size:.875rem;color:var(--muted);font-weight:500;margin-bottom:12px;">Masukkan PIN 4 Digit</label>
-        <input
-          type="password"
-          id="iPin"
-          inputmode="numeric"
-          maxlength="4"
-          pattern="[0-9]*"
-          placeholder="••••"
-          autocomplete="off"
-          oninput="onPinInput(this)"
-          onkeydown="if(event.key==='Enter')doLogin()"
-          style="text-align:center;font-size:2.2rem;letter-spacing:10px;font-family:'JetBrains Mono',monospace;padding:14px;border-radius:12px;"
-        >
+      <div style="text-align:center;">
+        <div style="font-size:.8125rem;color:var(--muted);font-weight:500;margin-bottom:4px;">Masukkan PIN 4 Digit</div>
+        <div class="pin-boxes">
+          <input class="pin-box" id="p1" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+          <input class="pin-box" id="p2" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+          <input class="pin-box" id="p3" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+          <input class="pin-box" id="p4" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        </div>
       </div>
       <button class="btn btn-navy btn-full btn-lg" id="loginBtn" onclick="doLogin()" style="margin-top:4px;">
         <i class="fa fa-unlock-alt"></i> Log Masuk
@@ -1827,6 +1834,7 @@ var gsTimer = null;
 ════════════════════════════════════════════════════ */
 window.onload = function () {
   initDarkMode();
+  initPinBoxes();
 
   // Pulihkan sesi jika masih aktif (survive reload)
   var saved = sessionStorage.getItem('sk_loggedIn');
@@ -1863,32 +1871,81 @@ window.onload = function () {
 /* ════════════════════════════════════════════════════
    AUTH
 ════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   PIN OTP BOXES
+════════════════════════════════════════════════════ */
+var PIN_IDS = ['p1','p2','p3','p4'];
+
+function initPinBoxes() {
+  PIN_IDS.forEach(function (id, idx) {
+    var el = document.getElementById(id);
+    el.addEventListener('input', function () {
+      // Hanya terima digit tunggal
+      var v = this.value.replace(/\D/g, '');
+      this.value = v ? v.slice(-1) : '';
+      this.classList.toggle('filled', Boolean(this.value));
+      // Auto-focus kotak seterusnya
+      if (this.value && idx < 3) document.getElementById(PIN_IDS[idx + 1]).focus();
+      // Auto-submit bila kotak terakhir diisi
+      if (idx === 3 && getPin().length === 4) setTimeout(doLogin, 80);
+    });
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !this.value && idx > 0) {
+        var prev = document.getElementById(PIN_IDS[idx - 1]);
+        prev.value = ''; prev.classList.remove('filled'); prev.focus();
+      }
+      if (e.key === 'Enter') doLogin();
+    });
+    el.addEventListener('focus', function () { this.select(); });
+    // Handle paste — isi semua kotak sekaligus
+    el.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0, 4);
+      PIN_IDS.forEach(function (pid, i) {
+        var box = document.getElementById(pid);
+        box.value = text[i] || '';
+        box.classList.toggle('filled', Boolean(box.value));
+      });
+      var last = Math.min(text.length, 3);
+      document.getElementById(PIN_IDS[last]).focus();
+      if (text.length === 4) setTimeout(doLogin, 80);
+    });
+  });
+}
+
+function getPin() {
+  return PIN_IDS.map(function (id) { return document.getElementById(id).value; }).join('');
+}
+
+function clearPinBoxes() {
+  PIN_IDS.forEach(function (id) {
+    var el = document.getElementById(id);
+    el.value = ''; el.classList.remove('filled');
+  });
+}
+
 function openLoginModal() {
   document.getElementById('loginErr').style.display = 'none';
-  document.getElementById('iPin').value = '';
   document.getElementById('loginBtn').disabled = false;
   document.getElementById('loginBtn').innerHTML = '<i class="fa fa-unlock-alt"></i> Log Masuk';
+  clearPinBoxes();
   openModal('loginModal');
-  setTimeout(function () { document.getElementById('iPin').focus(); }, 150);
+  setTimeout(function () { document.getElementById('p1').focus(); }, 150);
 }
 
 function closeLoginModal() {
   closeModal('loginModal');
-  document.getElementById('iPin').value = '';
+  clearPinBoxes();
   document.getElementById('loginErr').style.display = 'none';
 }
 
-function onPinInput(el) {
-  el.value = el.value.replace(/\D/g, '');
-  if (el.value.length === 4) doLogin();
-}
-
 function doLogin() {
-  var pin = document.getElementById('iPin').value.trim();
+  var pin = getPin();
   var btn = document.getElementById('loginBtn');
   var err = document.getElementById('loginErr');
   err.style.display = 'none';
-  if (!pin || pin.length !== 4) { showErr(err, 'Sila masukkan PIN 4 digit.'); return; }
+  if (pin.length !== 4) { showErr(err, 'Sila masukkan PIN 4 digit.'); return; }
+  if (btn.disabled) return; // elak double-submit
   btn.disabled = true;
   btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Mengesahkan...';
   gasCall('login', { pin: pin },
@@ -1900,7 +1957,7 @@ function doLogin() {
         sessionStorage.setItem('sk_schoolName', r.schoolName);
         document.getElementById('sbName').textContent        = r.schoolName;
         document.getElementById('mobileSchName').textContent = r.schoolName;
-        document.getElementById('iPin').value = '';
+        clearPinBoxes();
         closeModal('loginModal');
         document.getElementById('landingPage').classList.add('hidden');
         document.getElementById('appPage').classList.remove('hidden');
@@ -1909,14 +1966,14 @@ function doLogin() {
         initIdleTimer();
       } else {
         showErr(err, r.message || 'Log masuk gagal.');
-        document.getElementById('iPin').value = '';
-        document.getElementById('iPin').focus();
+        clearPinBoxes();
+        setTimeout(function () { document.getElementById('p1').focus(); }, 50);
       }
     },
     function (e) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-unlock-alt"></i> Log Masuk';
-      showErr(err, 'Ralat: ' + e.message);
+      showErr(err, 'Ralat sambungan. Cuba semula.');
     }
   );
 }
@@ -1927,7 +1984,7 @@ function doLogout() {
   sessionStorage.removeItem('sk_schoolName');
   document.getElementById('appPage').classList.add('hidden');
   document.getElementById('landingPage').classList.remove('hidden');
-  document.getElementById('iPin').value = '';
+  clearPinBoxes();
   document.getElementById('gsInput').value = '';
   document.getElementById('gsDropdown').classList.add('hidden');
   document.getElementById('loginErr').style.display = 'none';
